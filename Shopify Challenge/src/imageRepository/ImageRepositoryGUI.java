@@ -87,6 +87,12 @@ public final class ImageRepositoryGUI {
 	
 	private final JLabel iconLabel;
 	
+	private final JLabel usernameLabel;
+	
+	private final JButton loginRegisterButton;
+	
+	private User currentUser = null;
+	
 	private ImageRepository repository;
 	
 	/**
@@ -117,10 +123,24 @@ public final class ImageRepositoryGUI {
 			
 			masterPanel.add(rightPanel, BorderLayout.EAST);
 			
-			// various buttons to alter settings
-			final JLabel username = new JLabel("Not logged in");
-			rightPanel.add(username, BorderLayout.NORTH);
+			// user logon button
+			final JPanel userPanel = new JPanel(new BorderLayout());
+			rightPanel.add(userPanel, BorderLayout.NORTH);
 			
+			this.usernameLabel = new JLabel("Not logged in");
+			userPanel.add(this.usernameLabel, BorderLayout.CENTER);
+			
+			this.loginRegisterButton = new JButton("Log in/Register");
+			userPanel.add(this.loginRegisterButton, BorderLayout.EAST);
+			this.loginRegisterButton.addActionListener(e -> {
+				if (this.currentUser == null) {
+					new UserLoginDialog(this.frame, this::loginOrRegister);
+				} else {
+					this.logOut();
+				}
+			});
+			
+			// action buttons
 			final JPanel addRemove = new JPanel(new GridLayout(0, 1));
 			rightPanel.add(addRemove, BorderLayout.SOUTH);
 			
@@ -200,6 +220,65 @@ public final class ImageRepositoryGUI {
 	}
 	
 	/**
+	 * Logs on or offers to register if there is no user with the provided
+	 * username.
+	 *
+	 * @param username provided username
+	 * @param password provided password
+	 * @return true iff the log on or registration was successful
+	 * @since 2021-01-17
+	 */
+	private boolean loginOrRegister(String username, String password) {
+		final User user = this.repository.getUser(username);
+		
+		if (user == null) { // register
+			final int result = JOptionPane.showConfirmDialog(this.frame,
+					"There is no user with username \"" + username
+							+ "\".  Register as \"" + username + "\"?",
+					"New User Registration", JOptionPane.YES_NO_OPTION);
+			
+			switch (result) {
+			case JOptionPane.YES_OPTION:
+				final User newUser = User.createUser(username, password);
+				this.repository.addUser(newUser);
+				this.currentUser = newUser;
+				
+				this.usernameLabel.setText("Logged in as " + username);
+				this.loginRegisterButton.setText("Log out");
+				
+				return true; // logged on as new user
+				
+			default:
+				return false; // did not log in
+			}
+		} else { // log on
+			if (user.authenticatePassword(password)) {
+				this.currentUser = user;
+				
+				this.usernameLabel.setText("Logged in as " + username);
+				this.loginRegisterButton.setText("Log out");
+				
+				return true; // logged on as existing user with correct password
+			} else {
+				JOptionPane.showMessageDialog(this.frame, "Incorrect password.",
+						"Error", JOptionPane.ERROR_MESSAGE);
+				return false; // logged on as existing user with incorrect password
+			}
+		}
+	}
+	
+	/**
+	 * Logs out of the system.
+	 * 
+	 * @since 2021-01-17
+	 */
+	public void logOut() {
+		this.currentUser = null;
+		this.loginRegisterButton.setText("Log in/Register");
+		this.usernameLabel.setText("Not logged in");
+	}
+	
+	/**
 	 * Removes the selected images, warning the user if multiple images are
 	 * selected.
 	 * 
@@ -224,6 +303,11 @@ public final class ImageRepositoryGUI {
 		}
 	}
 	
+	/**
+	 * Saves the selected files, prompting the user for save location
+	 * 
+	 * @since 2021-01-17
+	 */
 	public void saveSelected() {
 		final int[] selectedIndices = this.imageJList.getSelectedIndices();
 		
@@ -245,6 +329,11 @@ public final class ImageRepositoryGUI {
 		}
 	}
 	
+	/**
+	 * Updates the image view, called when the selection on the list changes.
+	 * 
+	 * @since 2021-01-17
+	 */
 	public void updateImageView() {
 		final int[] selectedIndices = this.imageJList.getSelectedIndices();
 		

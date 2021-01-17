@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -121,6 +122,15 @@ public final class ImageRepository {
 	}
 	
 	/**
+	 * Adds a new user to the system.
+	 *
+	 * @since 2021-01-17
+	 */
+	public final void addUser(User user) {
+		this.users.add(user);
+	}
+	
+	/**
 	 * @return the directory
 	 * @since 2021-01-17
 	 */
@@ -144,6 +154,18 @@ public final class ImageRepository {
 	
 	private final Path getPath(String imageFilename) {
 		return Path.of(this.directory.getAbsolutePath(), imageFilename);
+	}
+	
+	/**
+	 * @return the user with username {@code username}, or {@code null} if none
+	 *         is found
+	 * @since 2021-01-17
+	 */
+	public final User getUser(String username) {
+		for (final User user : this.users)
+			if (Objects.equals(username, user.getUsername()))
+				return user;
+		return null;
 	}
 	
 	/**
