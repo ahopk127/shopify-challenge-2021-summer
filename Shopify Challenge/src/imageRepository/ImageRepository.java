@@ -17,12 +17,16 @@
 package imageRepository;
 
 import java.awt.Image;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +40,8 @@ import javax.imageio.ImageIO;
  * @since 2021-01-17
  */
 public final class ImageRepository {
+	private static final String USERS_FILE_PATH = "users.txt";
+	
 	/**
 	 * Loads an image repository from a directory {@code imageDir}.
 	 *
@@ -44,22 +50,56 @@ public final class ImageRepository {
 	public static final ImageRepository fromDirectory(File imageDir) {
 		final Map<String, ImageEntry> data = new HashMap<>();
 		for (final File f : imageDir.listFiles()) {
-			data.put(f.getName(), ImageEntry.loadImage(f.getName()));
+			if (!USERS_FILE_PATH.equals(f.getName())) {
+				data.put(f.getName(), ImageEntry.loadImage(f.getName()));
+			}
 		}
-		return new ImageRepository(imageDir, data);
+		return new ImageRepository(imageDir, data,
+				loadUsers(new File(imageDir, USERS_FILE_PATH)));
+	}
+	
+	/**
+	 * Loads user data from a file
+	 *
+	 * @param file file to load data from
+	 * @return list of users
+	 * @since 2021-01-17
+	 */
+	private static final List<User> loadUsers(File file) {
+		// return empty list if no user data found
+		if (!file.exists())
+			return new ArrayList<>();
+		
+		// create user list
+		final List<User> users = new ArrayList<>();
+		
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				users.add(User.fromString(line));
+			}
+		} catch (final IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return users;
 	}
 	
 	private final File directory;
 	private final Map<String, ImageEntry> data;
+	private final List<User> users;
 	
 	/**
 	 * @param directory directory where images and data are stored
 	 * @param data      image data
 	 * @since 2021-01-17
 	 */
-	private ImageRepository(File directory, Map<String, ImageEntry> data) {
+	private ImageRepository(File directory, Map<String, ImageEntry> data,
+			List<User> users) {
 		this.directory = directory;
 		this.data = data;
+		this.users = users;
 	}
 	
 	/**

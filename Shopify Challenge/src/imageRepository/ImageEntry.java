@@ -23,7 +23,6 @@ package imageRepository;
  */
 public final class ImageEntry {
 	public static final ImageEntry loadImage(String filename) {
-//		final Image image = ImageIO.read(file);
 		return new ImageEntry(filename);
 	}
 	
