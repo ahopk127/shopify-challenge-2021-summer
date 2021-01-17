@@ -31,6 +31,8 @@ import javax.swing.JScrollPane;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
+import imageRepository.libraries.DelegateListModel;
+
 /**
  * The GUI for the image repository
  *

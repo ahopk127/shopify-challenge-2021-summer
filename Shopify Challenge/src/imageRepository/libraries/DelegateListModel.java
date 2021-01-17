@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package imageRepository;
+package imageRepository.libraries;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +34,7 @@ import javax.swing.AbstractListModel;
  * 
  * @author Adrien Hopkins
  */
-final class DelegateListModel<E> extends AbstractListModel<E>
+public final class DelegateListModel<E> extends AbstractListModel<E>
 		implements List<E> {
 	/**
 	 */

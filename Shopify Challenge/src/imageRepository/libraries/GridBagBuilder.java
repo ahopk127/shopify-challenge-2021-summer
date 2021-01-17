@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package imageRepository;
+package imageRepository.libraries;
 
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
@@ -27,7 +27,7 @@ import java.awt.Insets;
  * 
  * @author Adrien Hopkins
  */
-final class GridBagBuilder {
+public final class GridBagBuilder {
 	/**
 	 * The built {@code GridBagConstraints}'s {@code gridx} property.
 	 * <p>
