@@ -17,6 +17,8 @@
 package imageRepository;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.io.File;
 import java.nio.file.Files;
@@ -31,10 +33,12 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.LineBorder;
 
 import imageRepository.libraries.DelegateListModel;
 
@@ -75,12 +79,17 @@ public final class ImageRepositoryGUI {
 	
 	private final JFileChooser fileChooser;
 	
+	private final JList<String> imageJList;
+	
 	private final List<String> imageList;
+	
+	private final ImageIcon imageIcon;
+	
+	private final JLabel iconLabel;
 	
 	private ImageRepository repository;
 	
 	/**
-	 * 
 	 * @since 2021-01-17
 	 */
 	public ImageRepositoryGUI() {
@@ -97,8 +106,9 @@ public final class ImageRepositoryGUI {
 			final DelegateListModel<String> model = new DelegateListModel<>();
 			this.imageList = model;
 			
-			final JList<String> list = new JList<>(model);
-			masterPanel.add(new JScrollPane(list), BorderLayout.CENTER);
+			this.imageJList = new JList<>(model);
+			masterPanel.add(new JScrollPane(this.imageJList), BorderLayout.CENTER);
+			this.imageJList.addListSelectionListener(e -> this.updateImageView());
 		}
 		
 		{
@@ -111,19 +121,26 @@ public final class ImageRepositoryGUI {
 			final JLabel username = new JLabel("Not logged in");
 			rightPanel.add(username, BorderLayout.NORTH);
 			
-			final JPanel addRemove = new JPanel(new GridLayout(2, 1));
+			final JPanel addRemove = new JPanel(new GridLayout(0, 1));
 			rightPanel.add(addRemove, BorderLayout.SOUTH);
 			
 			final JButton addButton = new JButton("Add image(s)");
 			addButton.addActionListener(e -> this.addFiles());
 			addRemove.add(addButton);
 			final JButton removeButton = new JButton("Remove selected");
+			removeButton.addActionListener(e -> this.removeSelected());
 			addRemove.add(removeButton);
+			final JButton saveButton = new JButton("Save selected");
+			saveButton.addActionListener(e -> this.saveSelected());
+			addRemove.add(saveButton);
 			
 			// image preview
-			final ImageIcon icon = new ImageIcon();
-			final JLabel imageLabel = new JLabel(icon);
-			rightPanel.add(imageLabel, BorderLayout.CENTER);
+			this.imageIcon = new ImageIcon();
+			this.iconLabel = new JLabel();
+			this.iconLabel.setDisabledIcon(this.imageIcon);
+			this.iconLabel.setBorder(new LineBorder(Color.BLACK));
+			this.iconLabel.setPreferredSize(new Dimension(240, 160));
+			rightPanel.add(this.iconLabel, BorderLayout.CENTER);
 		}
 		
 		this.fileChooser = new JFileChooser();
@@ -180,5 +197,68 @@ public final class ImageRepositoryGUI {
 		
 		this.imageList.clear();
 		this.imageList.addAll(this.repository.imageNames());
+	}
+	
+	/**
+	 * Removes the selected images, warning the user if multiple images are
+	 * selected.
+	 * 
+	 * @since 2021-01-17
+	 */
+	public void removeSelected() {
+		final int[] selectedIndices = this.imageJList.getSelectedIndices();
+		
+		if (selectedIndices.length > 1) {
+			final int result = JOptionPane.showConfirmDialog(this.frame,
+					"You are about to delete " + selectedIndices.length
+							+ " images.  Are you sure you want to continue?",
+					"Multiple Image Deletion Warning", JOptionPane.OK_CANCEL_OPTION);
+			if (result == JOptionPane.CANCEL_OPTION)
+				return;
+		}
+		
+		// remove files
+		for (final int i : selectedIndices) {
+			this.repository.removeImage(this.imageList.get(i));
+			this.imageList.remove(i);
+		}
+	}
+	
+	public void saveSelected() {
+		final int[] selectedIndices = this.imageJList.getSelectedIndices();
+		
+		// select save location
+		this.fileChooser.setDialogTitle(
+				selectedIndices.length > 1 ? "Choose a directory to save to."
+						: "Choose a location to save to.");
+		this.fileChooser.setFileSelectionMode(
+				selectedIndices.length > 1 ? JFileChooser.DIRECTORIES_ONLY
+						: JFileChooser.FILES_AND_DIRECTORIES);
+		this.fileChooser.setMultiSelectionEnabled(false);
+		this.fileChooser.showOpenDialog(this.frame);
+		
+		final File saveTo = this.fileChooser.getSelectedFile();
+		
+		// save files
+		for (final int i : selectedIndices) {
+			this.repository.saveImage(this.imageList.get(i), saveTo);
+		}
+	}
+	
+	public void updateImageView() {
+		final int[] selectedIndices = this.imageJList.getSelectedIndices();
+		
+		if (selectedIndices.length == 1) {
+			this.imageIcon.setImage(this.repository
+					.getImage(this.imageList.get(selectedIndices[0])));
+			this.iconLabel.setEnabled(false);
+			this.iconLabel.setText("");
+		} else if (selectedIndices.length == 0) {
+			this.iconLabel.setEnabled(true);
+			this.iconLabel.setText("");
+		} else {
+			this.iconLabel.setEnabled(true);
+			this.iconLabel.setText(selectedIndices.length + " images selected.");
+		}
 	}
 }

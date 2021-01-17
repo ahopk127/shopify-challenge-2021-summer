@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
 /**
  * A repository of images. Images are identified by their filename.
  * 
@@ -92,7 +94,12 @@ public final class ImageRepository {
 	 * @since 2021-01-17
 	 */
 	public final Image getImage(String name) {
-		return null; // TODO stub
+		try {
+			return ImageIO.read(this.getPath(name).toFile());
+		} catch (final IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	private final Path getPath(String imageFilename) {
@@ -117,6 +124,28 @@ public final class ImageRepository {
 		this.data.remove(name);
 		try {
 			Files.delete(this.getPath(name));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Saves an image to a file outside the repository.
+	 *
+	 * @param imageName name of image
+	 * @param saveTo    path to save to. If this is a directory, saves to the
+	 *                  directory with the original filename.
+	 * @since 2021-01-17
+	 */
+	public final void saveImage(String imageName, File saveTo) {
+		if (saveTo.isDirectory()) {
+			this.saveImage(imageName, new File(saveTo, imageName));
+			return;
+		}
+		
+		// copy file to filepath
+		try {
+			Files.copy(this.getPath(imageName), Path.of(saveTo.getAbsolutePath()));
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
