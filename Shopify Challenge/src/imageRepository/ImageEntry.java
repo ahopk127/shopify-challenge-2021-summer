@@ -16,17 +16,15 @@
  */
 package imageRepository;
 
-import java.io.File;
-
 /**
  * An image in the image repository.
  *
  * @since 2021-01-17
  */
 public final class ImageEntry {
-	public static final ImageEntry loadImage(File file) {
+	public static final ImageEntry loadImage(String filename) {
 //		final Image image = ImageIO.read(file);
-		return new ImageEntry(file.getName());
+		return new ImageEntry(filename);
 	}
 	
 	/**

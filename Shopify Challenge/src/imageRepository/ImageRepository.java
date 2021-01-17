@@ -42,7 +42,7 @@ public final class ImageRepository {
 	public static final ImageRepository fromDirectory(File imageDir) {
 		final Map<String, ImageEntry> data = new HashMap<>();
 		for (final File f : imageDir.listFiles()) {
-			data.put(f.getName(), ImageEntry.loadImage(f));
+			data.put(f.getName(), ImageEntry.loadImage(f.getName()));
 		}
 		return new ImageRepository(imageDir, data);
 	}
@@ -69,7 +69,13 @@ public final class ImageRepository {
 	 * @since 2021-01-17
 	 */
 	public final void addImage(File originalFilepath, String newFilepath) {
-		// TODO stub
+		this.data.put(newFilepath, ImageEntry.loadImage(newFilepath));
+		try {
+			Files.copy(Path.of(originalFilepath.getAbsolutePath()),
+					this.getPath(newFilepath));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**

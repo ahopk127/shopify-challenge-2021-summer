@@ -18,7 +18,12 @@ package imageRepository;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -39,6 +44,9 @@ import imageRepository.libraries.DelegateListModel;
  * @since 2021-01-17
  */
 public final class ImageRepositoryGUI {
+	private static final Pattern UNIQUE_FILE = Pattern
+			.compile("(.+)\\((\\d+)\\)\\.(\\w+)");
+	
 	/**
 	 * @param args commandline arguments
 	 * @since 2021-01-17
@@ -47,8 +55,26 @@ public final class ImageRepositoryGUI {
 		new ImageRepositoryGUI().init();
 	}
 	
+	/**
+	 * @return a "unique" filename derived from 'filename'
+	 * @since 2021-01-17
+	 */
+	private static final String unique(String filename) {
+		final Matcher matcher = UNIQUE_FILE.matcher(filename);
+		if (matcher.matches()) {
+			final int currentNum = Integer.parseInt(matcher.group(2));
+			return matcher.group(1) + "(" + Integer.toString(currentNum + 1) + ")."
+					+ matcher.group(3);
+		} else {
+			final String[] parts = filename.split("\\.");
+			return parts[0] + "(1)." + parts[1];
+		}
+	}
+	
 	private final JFrame frame;
+	
 	private final JFileChooser fileChooser;
+	
 	private final List<String> imageList;
 	
 	private ImageRepository repository;
@@ -89,6 +115,7 @@ public final class ImageRepositoryGUI {
 			rightPanel.add(addRemove, BorderLayout.SOUTH);
 			
 			final JButton addButton = new JButton("Add image(s)");
+			addButton.addActionListener(e -> this.addFiles());
 			addRemove.add(addButton);
 			final JButton removeButton = new JButton("Remove selected");
 			addRemove.add(removeButton);
@@ -100,10 +127,35 @@ public final class ImageRepositoryGUI {
 		}
 		
 		this.fileChooser = new JFileChooser();
-		this.fileChooser.setDialogTitle("Choose a repository directory.");
-		this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		
 		this.frame.pack();
+	}
+	
+	/**
+	 * Add one or more files to the repository. Files are chosen by the user with
+	 * a dialog.
+	 * 
+	 * @since 2021-01-17
+	 */
+	public void addFiles() {
+		this.fileChooser.setDialogTitle("Choose file(s) to add.");
+		this.fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		this.fileChooser.setMultiSelectionEnabled(true);
+		this.fileChooser.showOpenDialog(this.frame);
+		
+		final File[] files = this.fileChooser.getSelectedFiles();
+		
+		for (final File f : files) {
+			String newPath = f.getName();
+			
+			while (Files.exists(Path.of(
+					this.repository.getDirectory().getAbsolutePath(), newPath))) {
+				newPath = unique(newPath);
+			}
+			
+			this.repository.addImage(f, newPath);
+			this.imageList.add(newPath);
+		}
 	}
 	
 	public void init() {
@@ -112,15 +164,20 @@ public final class ImageRepositoryGUI {
 		this.loadDirectory();
 	}
 	
+	/**
+	 * Lets the user choose a directory, and sets that directory as the
+	 * repository.
+	 * 
+	 * @since 2021-01-17
+	 */
 	private void loadDirectory() {
+		this.fileChooser.setDialogTitle("Choose a repository directory.");
+		this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		this.fileChooser.setMultiSelectionEnabled(false);
 		this.fileChooser.showOpenDialog(this.frame);
 		this.repository = ImageRepository
 				.fromDirectory(this.fileChooser.getSelectedFile());
 		
-		this.update();
-	}
-	
-	private void update() {
 		this.imageList.clear();
 		this.imageList.addAll(this.repository.imageNames());
 	}
