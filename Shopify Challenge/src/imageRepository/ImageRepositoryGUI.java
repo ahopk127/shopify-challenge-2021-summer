@@ -92,6 +92,8 @@ public final class ImageRepositoryGUI {
 	
 	private final JButton loginRegisterButton;
 	
+	private final JButton addButton;
+	
 	private User currentUser = null;
 	
 	private ImageRepository repository;
@@ -145,9 +147,10 @@ public final class ImageRepositoryGUI {
 			final JPanel addRemove = new JPanel(new GridLayout(0, 1));
 			rightPanel.add(addRemove, BorderLayout.SOUTH);
 			
-			final JButton addButton = new JButton("Add private image(s)");
-			addButton.addActionListener(e -> this.addFiles(false));
-			addRemove.add(addButton);
+			this.addButton = new JButton("Add private image(s)");
+			this.addButton.addActionListener(e -> this.addFiles(false));
+			this.addButton.setEnabled(false);
+			addRemove.add(this.addButton);
 			final JButton addPublicButton = new JButton("Add public image(s)");
 			addPublicButton.addActionListener(e -> this.addFiles(true));
 			addRemove.add(addPublicButton);
@@ -254,6 +257,7 @@ public final class ImageRepositoryGUI {
 				this.loginRegisterButton.setText("Log out");
 				
 				this.repository.saveUsers(); // user list updated, save users
+				this.addButton.setEnabled(true);
 				return true; // logged on as new user
 				
 			default:
@@ -269,6 +273,8 @@ public final class ImageRepositoryGUI {
 				this.imageList.clear();
 				this.imageList
 						.addAll(this.repository.imageNames(user.getUsername()));
+				
+				this.addButton.setEnabled(true);
 				
 				return true; // logged on as existing user with correct password
 			} else {
@@ -288,6 +294,7 @@ public final class ImageRepositoryGUI {
 		this.currentUser = null;
 		this.loginRegisterButton.setText("Log in/Register");
 		this.usernameLabel.setText("Not logged in");
+		this.addButton.setEnabled(false);
 		
 		this.imageList.clear();
 		this.imageList.addAll(this.repository.imageNames(null));
