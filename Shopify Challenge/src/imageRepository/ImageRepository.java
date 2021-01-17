@@ -18,6 +18,11 @@ package imageRepository;
 
 import java.awt.Image;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,7 +40,11 @@ public final class ImageRepository {
 	 * @since 2021-01-17
 	 */
 	public static final ImageRepository fromDirectory(File imageDir) {
-		return null; // TODO method stub
+		final Map<String, ImageEntry> data = new HashMap<>();
+		for (final File f : imageDir.listFiles()) {
+			data.put(f.getName(), ImageEntry.loadImage(f));
+		}
+		return new ImageRepository(imageDir, data);
 	}
 	
 	private final File directory;
@@ -64,6 +73,14 @@ public final class ImageRepository {
 	}
 	
 	/**
+	 * @return the directory
+	 * @since 2021-01-17
+	 */
+	public final File getDirectory() {
+		return this.directory;
+	}
+	
+	/**
 	 * Gets the image with name {@code name} from the repository.
 	 *
 	 * @since 2021-01-17
@@ -72,21 +89,30 @@ public final class ImageRepository {
 		return null; // TODO stub
 	}
 	
+	private final Path getPath(String imageFilename) {
+		return Path.of(this.directory.getAbsolutePath(), imageFilename);
+	}
+	
 	/**
 	 * @return set of names of all images in repository
 	 * @since 2021-01-17
 	 */
 	public final Set<String> imageNames() {
-		return null; // TODO stub
+		return Collections.unmodifiableSet(this.data.keySet());
 	}
 	
 	/**
 	 * Removes an image from the directory
 	 *
-	 * @param path path of image to remove
+	 * @param name name of image to remove
 	 * @since 2021-01-17
 	 */
-	public final void removeImage(String path) {
-		// TODO stub
+	public final void removeImage(String name) {
+		this.data.remove(name);
+		try {
+			Files.delete(this.getPath(name));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

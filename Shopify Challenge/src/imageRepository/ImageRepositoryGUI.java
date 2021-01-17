@@ -18,14 +18,17 @@ package imageRepository;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 import javax.swing.border.BevelBorder;
 
 /**
@@ -43,6 +46,10 @@ public final class ImageRepositoryGUI {
 	}
 	
 	private final JFrame frame;
+	private final JFileChooser fileChooser;
+	private final List<String> imageList;
+	
+	private ImageRepository repository;
 	
 	/**
 	 * 
@@ -50,6 +57,7 @@ public final class ImageRepositoryGUI {
 	 */
 	public ImageRepositoryGUI() {
 		this.frame = new JFrame("Image Repository");
+		this.frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		
 		final JPanel masterPanel = new JPanel();
 		masterPanel.setLayout(new BorderLayout());
@@ -58,8 +66,10 @@ public final class ImageRepositoryGUI {
 		this.frame.add(masterPanel);
 		
 		{
-			final String[] items = { "a", "abc", "bcd", "9", "10", "12" };
-			final JList<String> list = new JList<>(items);
+			final DelegateListModel<String> model = new DelegateListModel<>();
+			this.imageList = model;
+			
+			final JList<String> list = new JList<>(model);
 			masterPanel.add(new JScrollPane(list), BorderLayout.CENTER);
 		}
 		
@@ -70,7 +80,7 @@ public final class ImageRepositoryGUI {
 			masterPanel.add(rightPanel, BorderLayout.EAST);
 			
 			// various buttons to alter settings
-			final JLabel username = new JLabel("user");
+			final JLabel username = new JLabel("Not logged in");
 			rightPanel.add(username, BorderLayout.NORTH);
 			
 			final JPanel addRemove = new JPanel(new GridLayout(2, 1));
@@ -87,11 +97,29 @@ public final class ImageRepositoryGUI {
 			rightPanel.add(imageLabel, BorderLayout.CENTER);
 		}
 		
+		this.fileChooser = new JFileChooser();
+		this.fileChooser.setDialogTitle("Choose a repository directory.");
+		this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
 		this.frame.pack();
 	}
 	
 	public void init() {
 		this.frame.setVisible(true);
+		
+		this.loadDirectory();
 	}
 	
+	private void loadDirectory() {
+		this.fileChooser.showOpenDialog(this.frame);
+		this.repository = ImageRepository
+				.fromDirectory(this.fileChooser.getSelectedFile());
+		
+		this.update();
+	}
+	
+	private void update() {
+		this.imageList.clear();
+		this.imageList.addAll(this.repository.imageNames());
+	}
 }
