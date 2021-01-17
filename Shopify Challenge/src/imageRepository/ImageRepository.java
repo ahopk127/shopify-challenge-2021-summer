@@ -18,8 +18,10 @@ package imageRepository;
 
 import java.awt.Image;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,7 +82,6 @@ public final class ImageRepository {
 				users.add(User.fromString(line));
 			}
 		} catch (final IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -88,6 +89,7 @@ public final class ImageRepository {
 	}
 	
 	private final File directory;
+	
 	private final Map<String, ImageEntry> data;
 	private final List<User> users;
 	
@@ -208,6 +210,24 @@ public final class ImageRepository {
 		// copy file to filepath
 		try {
 			Files.copy(this.getPath(imageName), Path.of(saveTo.getAbsolutePath()));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Saves the user data into the specified file.
+	 *
+	 * @param file file to save into
+	 * @since 2021-01-17
+	 */
+	public final void saveUsers() {
+		final File file = new File(this.directory, USERS_FILE_PATH);
+		
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			for (final User user : this.users) {
+				writer.write(user.toString() + "\n");
+			}
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

@@ -246,6 +246,7 @@ public final class ImageRepositoryGUI {
 				this.usernameLabel.setText("Logged in as " + username);
 				this.loginRegisterButton.setText("Log out");
 				
+				this.repository.saveUsers(); // user list updated, save users
 				return true; // logged on as new user
 				
 			default:
