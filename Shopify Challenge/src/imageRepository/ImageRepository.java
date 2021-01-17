@@ -16,11 +16,77 @@
  */
 package imageRepository;
 
+import java.awt.Image;
+import java.io.File;
+import java.util.Map;
+import java.util.Set;
+
 /**
+ * A repository of images. Images are identified by their filename.
+ * 
  * @author Adrien Hopkins
  *
  * @since 2021-01-17
  */
 public final class ImageRepository {
+	/**
+	 * Loads an image repository from a directory {@code imageDir}.
+	 *
+	 * @since 2021-01-17
+	 */
+	public static final ImageRepository fromDirectory(File imageDir) {
+		return null; // TODO method stub
+	}
 	
+	private final File directory;
+	private final Map<String, ImageEntry> data;
+	
+	/**
+	 * @param directory directory where images and data are stored
+	 * @param data      image data
+	 * @since 2021-01-17
+	 */
+	private ImageRepository(File directory, Map<String, ImageEntry> data) {
+		this.directory = directory;
+		this.data = data;
+	}
+	
+	/**
+	 * Adds an image to the directory
+	 *
+	 * @param originalFilepath place where image was originally stored
+	 * @param newFilepath      place where the image will be stored, relative to
+	 *                         directory, must be in repository directory.
+	 * @since 2021-01-17
+	 */
+	public final void addImage(File originalFilepath, String newFilepath) {
+		// TODO stub
+	}
+	
+	/**
+	 * Gets the image with name {@code name} from the repository.
+	 *
+	 * @since 2021-01-17
+	 */
+	public final Image getImage(String name) {
+		return null; // TODO stub
+	}
+	
+	/**
+	 * @return set of names of all images in repository
+	 * @since 2021-01-17
+	 */
+	public final Set<String> imageNames() {
+		return null; // TODO stub
+	}
+	
+	/**
+	 * Removes an image from the directory
+	 *
+	 * @param path path of image to remove
+	 * @since 2021-01-17
+	 */
+	public final void removeImage(String path) {
+		// TODO stub
+	}
 }

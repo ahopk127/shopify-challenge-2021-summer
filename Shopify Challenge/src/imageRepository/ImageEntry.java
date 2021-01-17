@@ -16,11 +16,31 @@
  */
 package imageRepository;
 
+import java.io.File;
+
 /**
  * An image in the image repository.
  *
  * @since 2021-01-17
  */
 public final class ImageEntry {
+	public static final ImageEntry loadImage(File file) {
+//		final Image image = ImageIO.read(file);
+		return new ImageEntry(file.getName());
+	}
 	
+	/**
+	 * The filename of the image, relative to the image directory. For example,
+	 * 'my-image.png'.
+	 */
+	private final String filename;
+	
+	/**
+	 * @param filename filename of image, relative to directory
+	 * @param image    image object
+	 * @since 2021-01-17
+	 */
+	private ImageEntry(String filename) {
+		this.filename = filename;
+	}
 }
