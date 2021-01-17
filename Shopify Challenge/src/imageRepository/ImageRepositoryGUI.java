@@ -24,6 +24,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -144,9 +145,12 @@ public final class ImageRepositoryGUI {
 			final JPanel addRemove = new JPanel(new GridLayout(0, 1));
 			rightPanel.add(addRemove, BorderLayout.SOUTH);
 			
-			final JButton addButton = new JButton("Add image(s)");
-			addButton.addActionListener(e -> this.addFiles());
+			final JButton addButton = new JButton("Add private image(s)");
+			addButton.addActionListener(e -> this.addFiles(false));
 			addRemove.add(addButton);
+			final JButton addPublicButton = new JButton("Add public image(s)");
+			addPublicButton.addActionListener(e -> this.addFiles(true));
+			addRemove.add(addPublicButton);
 			final JButton removeButton = new JButton("Remove selected");
 			removeButton.addActionListener(e -> this.removeSelected());
 			addRemove.add(removeButton);
@@ -172,9 +176,11 @@ public final class ImageRepositoryGUI {
 	 * Add one or more files to the repository. Files are chosen by the user with
 	 * a dialog.
 	 * 
+	 * @param isPublic whether or not the images are public
+	 * 
 	 * @since 2021-01-17
 	 */
-	public void addFiles() {
+	public void addFiles(boolean isPublic) {
 		this.fileChooser.setDialogTitle("Choose file(s) to add.");
 		this.fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		this.fileChooser.setMultiSelectionEnabled(true);
@@ -190,7 +196,8 @@ public final class ImageRepositoryGUI {
 				newPath = unique(newPath);
 			}
 			
-			this.repository.addImage(f, newPath);
+			this.repository.addImage(f, newPath, this.currentUser.getUsername(),
+					isPublic);
 			this.imageList.add(newPath);
 		}
 	}
@@ -216,7 +223,7 @@ public final class ImageRepositoryGUI {
 				.fromDirectory(this.fileChooser.getSelectedFile());
 		
 		this.imageList.clear();
-		this.imageList.addAll(this.repository.imageNames());
+		this.imageList.addAll(this.repository.imageNames(null));
 	}
 	
 	/**
@@ -259,6 +266,10 @@ public final class ImageRepositoryGUI {
 				this.usernameLabel.setText("Logged in as " + username);
 				this.loginRegisterButton.setText("Log out");
 				
+				this.imageList.clear();
+				this.imageList
+						.addAll(this.repository.imageNames(user.getUsername()));
+				
 				return true; // logged on as existing user with correct password
 			} else {
 				JOptionPane.showMessageDialog(this.frame, "Incorrect password.",
@@ -277,6 +288,9 @@ public final class ImageRepositoryGUI {
 		this.currentUser = null;
 		this.loginRegisterButton.setText("Log in/Register");
 		this.usernameLabel.setText("Not logged in");
+		
+		this.imageList.clear();
+		this.imageList.addAll(this.repository.imageNames(null));
 	}
 	
 	/**
@@ -297,10 +311,38 @@ public final class ImageRepositoryGUI {
 				return;
 		}
 		
+		// check you can remove files
+		int removable = 0;
+		for (final int i : selectedIndices) {
+			final Optional<String> imageOwner = this.repository
+					.getImageData(this.imageList.get(i)).getUser();
+			if (imageOwner.isPresent() && this.currentUser != null
+					&& imageOwner.get().equals(this.currentUser.getUsername())) {
+				removable++;
+			}
+		}
+		
+		// display error if you cannot remove any of the selected files.
+		if (removable == 0) {
+			JOptionPane.showMessageDialog(this.frame,
+					"You do not own any of the selected images.  You can only remove your own images.",
+					"Unowned Image Deletion Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		} else if (removable < selectedIndices.length) {
+			final int result = JOptionPane.showConfirmDialog(this.frame,
+					"You do not own all of the selected images, you can only remove the "
+							+ removable + " that you own.  Continue?",
+					"Unowned Image Deletion Warning", JOptionPane.OK_CANCEL_OPTION);
+			if (result == JOptionPane.CANCEL_OPTION)
+				return;
+		}
+		
 		// remove files
 		for (final int i : selectedIndices) {
-			this.repository.removeImage(this.imageList.get(i));
-			this.imageList.remove(i);
+			if (this.repository.removeImage(this.imageList.get(i),
+					this.currentUser.getUsername())) {
+				this.imageList.remove(i);
+			}
 		}
 	}
 	
